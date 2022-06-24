@@ -24,5 +24,10 @@
   "bugs": {
     "url": "https://github.com/paulobike/create-typed-express-app/issues"
   },
-  "homepage": "https://github.com/paulobike/create-typed-express-app#readme"
+  "homepage": "https://github.com/paulobike/create-typed-express-app#readme",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^9.3.0",
+    "validate-npm-package-name": "^4.0.0"
+  }
 }

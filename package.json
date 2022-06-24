@@ -1,0 +1,28 @@
+{
+  "name": "create-typed-express-app",
+  "version": "1.0.0",
+  "description": "A program that gets you on the go with a typescript express app template",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paulobike/create-typed-express-app.git"
+  },
+  "keywords": [
+    "typescript",
+    "express",
+    "app",
+    "typescript-server"
+  ],
+  "bin": {
+    "create-typed-express-app": "./index.js"
+  },
+  "author": "paul obike",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/paulobike/create-typed-express-app/issues"
+  },
+  "homepage": "https://github.com/paulobike/create-typed-express-app#readme"
+}

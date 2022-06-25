@@ -50,8 +50,14 @@ const init = async (hrtime) => {
     if (!fs.existsSync(root)){
         fs.mkdirSync(root, { recursive: true });
     }
-    
+
     process.chdir(root);
+
+    /** LISTEN FOR SIGINT AND CLEANUP */
+    process.on('SIGINT', signal => {
+        selfDestruct(root, '\nInterrupted by user ^C', 1);
+    });
+    
 
     /** RUN NPM INIT */
     let npmInitSuccess = await initNPM(!!options.y);
@@ -102,8 +108,8 @@ function initNPM(skip) {
         let args = ['init'];
         skip && args.push('-y');
         let npmInit = spawn('npm', args);
-        npmInit.stdout.pipe(process.stdout)
-        npmInit.stderr.pipe(process.stderr)
+        npmInit.stdout.pipe(process.stdout);
+        npmInit.stderr.pipe(process.stderr);
         
         let line = readline.createInterface({input: process.stdin});
 
@@ -116,6 +122,10 @@ function initNPM(skip) {
             npmInit.stdin.end();
             resolve(code === 0? true: false);
         });
+
+        npmInit.on('error', err => {
+            console.log('Oops! it seems npm cannot be found on your system\n');
+        });
     });    
 }
 
@@ -126,6 +136,10 @@ function installPackages(cwd, packages, dev) {
         packageInstall.stderr.pipe(process.stderr);
 
         packageInstall.on('close', (code) => resolve(code === 0? true: false));
+
+        packageInstall.on('error', err => {
+            console.log('Oops! it seems npm cannot be found on your system\n');
+        });
     });
 }
 
@@ -134,7 +148,10 @@ function createTsDirs(cwd, tsDirectories, tsFiles, strictMode) {
     let projectPackageJson = require(path.join(cwd, 'package.json'));
     let tsOptions = ['tsc', '--init'];
     if(strictMode) tsOptions.push('--strict');
-    spawn('npx', tsOptions, { cwd });
+    let tsInit = spawn('npx', tsOptions, { cwd });
+    tsInit.on('error', err => {
+        console.log('Oops! it seems npm cannot be found on your system\n');
+    });
 
     // Create directories
     for(let directory of tsDirectories) {
@@ -177,9 +194,12 @@ function displayAnimation(text = '') {
 
 function selfDestruct(project, message, exitCode) {
     if(message) console.error(chalk.redBright(message))
-    if(project) fs.rmSync(project, { recursive: true });
+    if(project) {
+        console.log(chalk.yellowBright('\nCleaning up... '));
+        fs.rmSync(project, { recursive: true });
+    }
     if(exitCode) {
-        console.error(chalk.redBright('Exiting with status code ' + exitCode));
+        console.error(chalk.redBright('\nExiting with status code ' + exitCode));
         process.exit(exitCode);
     }
 }

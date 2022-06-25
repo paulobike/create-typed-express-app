@@ -4,4 +4,4 @@
 
 const { init } = require('./create-typed-express-app');
 
-init();
+init(process.hrtime());

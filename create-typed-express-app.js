@@ -9,9 +9,9 @@ const validateNpmPackageName = require('validate-npm-package-name');
 const packageJson = require('./package.json');
 const { directories, files, scripts } = require('./templates');
 const dependencies = ['express'];
-const devDependencies = ['typescript', 'nodemon', '@types/express', '@types/node']
+const devDependencies = ['typescript', 'nodemon', 'ts-node', '@types/express', '@types/node']
 
-const init = async () => {
+const init = async (hrtime) => {
     let directory, options;
     const program = new Command(packageJson.name);
 
@@ -31,30 +31,32 @@ const init = async () => {
     const projectName = path.basename(root);
     /** CHECK IF DIRECTORY NAME IS VALID */
     if(!validateDirName(projectName, devDependencies.concat(dependencies))) {
-        console.error(
+        selfDestruct(
+            null,
             chalk.red(
               `Cannot create a project named ${chalk.green(
                 `"${projectName}"`
               )} either because it does not meet npm naming prescriptions or a dependency with the same name exists.\n` +
                 `Due to the way npm works, the following names are not allowed:\n\n`
-            ) +
-              chalk.yellowBright(dependencies.map(depName => `  ${depName}`).join('\n')) +
-              chalk.red('\n\nPlease use a different project name.')
+            ) +  chalk.yellowBright(dependencies.map(depName => `  ${depName}`).join('\n')) +
+            chalk.red('\n\nPlease use a different project name.'),
+            1
         );
-        process.exit(1);
     }
+
     console.log(`Creating a new typed Express app in ${chalk.green(root)}.`);
 
     /** CREATE PROJECT DIRECTORY */
     if (!fs.existsSync(root)){
         fs.mkdirSync(root, { recursive: true });
-    }    
+    }
+    
     process.chdir(root);
 
     /** RUN NPM INIT */
     let npmInitSuccess = await initNPM(!!options.y);
     if(!npmInitSuccess) {
-        process.exit(1);
+        selfDestruct(root, 'Failed to initialize project', 1);
     }
 
     /** INSTALL NECESSARY PACKAGES */
@@ -65,22 +67,28 @@ const init = async () => {
     packageInstall = await installPackages(process.cwd(), dependencies, false);
     clearTimeout(animation);
     if(!packageInstall) {
-        process.exit(1);
+        selfDestruct(root, 'Failed to install dependencies', 1);
     }
-    console.log(chalk.green('✓ Done.'))
+    console.log(chalk.green('✓ Done.\n'))
     //Dev dependencies
     animation = displayAnimation(chalk.cyan('Installing necessary dev dependencies'));
     packageInstall = await installPackages(process.cwd(), devDependencies, true);
     clearTimeout(animation);
     if(!packageInstall) {
-        process.exit(1);
+        selfDestruct(root, 'Failed to install dev dependencies', 1);
     }
-    console.log(chalk.green('✓ Done.'))
+    console.log(chalk.green('✓ Done.\n'))
     /** CREATE DIRECTORY STRUCTURE */
     createTsDirs(process.cwd(), directories, files, !!options.strict);
 
     /** SETUP NPM SCRIPTS */
     createScripts(process.cwd(), scripts);
+    let duration = process.hrtime(hrtime);
+    console.log(
+        chalk.green(`\ncreate-typed-express-app done  `) + 
+        chalk.cyan(`-${Math.round(((duration[0] + (duration[1]/1e+9)) * 100)) / 100}s\n\n`) +
+        `To start the development server;\n\nrun ${chalk.bgRed(chalk.cyan('cd ' + root + ' && npm run dev'))} `
+    )
 }
 
 function validateDirName(name, dependencyList) {
@@ -113,7 +121,7 @@ function initNPM(skip) {
 
 function installPackages(cwd, packages, dev) {
     return new Promise(resolve => {
-        let packageInstall = spawn('npm', ['install', ...packages, '--save' + (dev? '-dev': '')], { cwd });
+        let packageInstall = spawn('npm', ['install', '--no-audit', '--save' + (dev? '-dev': ''), ...packages], { cwd });
         packageInstall.stdout.pipe(process.stdout);
         packageInstall.stderr.pipe(process.stderr);
 
@@ -157,6 +165,15 @@ function displayAnimation(text = '') {
         process.stdout.write("\r" + items[curr++] + " " + text);
         curr %= 10;
     }, 100);
+}
+
+function selfDestruct(project, message, exitCode) {
+    if(message) console.error(chalk.redBright(message))
+    if(project) fs.rmSync(project, { recursive: true });
+    if(exitCode) {
+        console.error(chalk.redBright('Exiting with status code ' + exitCode));
+        process.exit(exitCode);
+    }
 }
 
 module.exports.init = init;

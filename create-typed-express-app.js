@@ -7,7 +7,9 @@ const { Command } = require('commander');
 const validateNpmPackageName = require('validate-npm-package-name');
 
 const packageJson = require('./package.json');
-const dependencies = ['typescript', 'express'];
+const { directories, files } = require('./templates');
+const dependencies = ['express'];
+const devDependencies = ['typescript', 'nodemon', '@types/express', '@types/node']
 
 const init = async () => {
     let directory, options;
@@ -27,9 +29,8 @@ const init = async () => {
 
     const root = path.resolve(directory);
     const projectName = path.basename(root);
-    console.log(directory, root, projectName)
     /** CHECK IF DIRECTORY NAME IS VALID */
-    if(!validateDirName(projectName, dependencies)) {
+    if(!validateDirName(projectName, devDependencies.concat(dependencies))) {
         console.error(
             chalk.red(
               `Cannot create a project named ${chalk.green(
@@ -58,7 +59,23 @@ const init = async () => {
 
     /** INSTALL NECESSARY PACKAGES */
 
+    // Dependencies
+    let animation, packageInstall;
+    animation = displayAnimation('Installing necessary dependencies');
+    packageInstall = await installPackages(dependencies);
+    clearTimeout(animation);
+    if(!packageInstall) {
+        process.exit(1);
+    }
+    //Dev dependencies
+    animation = displayAnimation('Installing necessary dev dependencies');
+    packageInstall = await installPackages(devDependencies);
+    clearTimeout(animation);
+    if(!packageInstall) {
+        process.exit(1);
+    }
     /** CREATE DIRECTORY STRUCTURE */
+    createTsDirs(process.cwd(), directories, files);
 
     /** SETUP NPM SCRIPTS */
 }
@@ -86,13 +103,49 @@ function initNPM(skip) {
         npmInit.on('close', (code) => {
             line.close();
             npmInit.stdin.end();
-            resolve(code === 0? true: false)
+            resolve(code === 0? true: false);
         });
     });    
 }
 
-function createTsDirs() {
-    execSync('ty')
+function installPackages(packages, dev) {
+    return new Promise(resolve => {
+        let packageInstall = spawn('npm', ['install', ...packages, '--save' + dev&'-dev']);
+        packageInstall.stdout.pipe(process.stdout);
+        packageInstall.stderr.pipe(process.stderr);
+
+        packageInstall.on('close', (code) => resolve(code === 0? true: false));
+    });
+}
+
+function createTsDirs(cwd, tsDirectories, tsFiles) {
+    // Initialize typescript
+    let projectPackageJson = require(path.join(cwd, 'package.json'));
+    let initTs = execSync('npx', ['tsc', '--init']);
+
+    // Create directories
+    for(let directory of tsDirectories) {
+        fs.mkdirSync(path.join(cwd, directory), {recursive: true});
+    }
+    
+    // Name entry file
+    let main = projectPackageJson && projectPackageJson.main? 
+    `src/${projectPackageJson.main.split('.')[0] + '.ts'}`: 'src/index.ts';
+    tsFiles.entryFile.path = main;
+    
+    // Create project files
+    for(let file in tsFiles) {
+        fs.writeFileSync(path.join(cwd, tsFiles[file].path), tsFiles[file].template);
+    }
+}
+
+function displayAnimation(text = '') {
+    var items = ["⠙", "⠘", "⠰", "⠴", "⠤", "⠦", "⠆", "⠃", "⠋", "⠉"];
+    var curr = 0;
+    return setInterval(function() {
+        process.stdout.write("\r" + items[curr++] + " " + text);
+        curr %= 10;
+    }, 100);
 }
 
 module.exports.init = init;

@@ -1,6 +1,6 @@
 {
   "name": "create-typed-express-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A program that gets you on the go with a typescript express app template",
   "main": "index.js",
   "scripts": {

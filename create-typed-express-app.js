@@ -7,7 +7,7 @@ const { Command } = require('commander');
 const validateNpmPackageName = require('validate-npm-package-name');
 
 const packageJson = require('./package.json');
-const { directories, files } = require('./templates');
+const { directories, files, scripts } = require('./templates');
 const dependencies = ['express'];
 const devDependencies = ['typescript', 'nodemon', '@types/express', '@types/node']
 
@@ -78,6 +78,7 @@ const init = async () => {
     createTsDirs(process.cwd(), directories, files);
 
     /** SETUP NPM SCRIPTS */
+    createScripts(process.cwd(), scripts);
 }
 
 function validateDirName(name, dependencyList) {
@@ -137,6 +138,12 @@ function createTsDirs(cwd, tsDirectories, tsFiles) {
     for(let file in tsFiles) {
         fs.writeFileSync(path.join(cwd, tsFiles[file].path), tsFiles[file].template);
     }
+}
+
+function createScripts(cwd, projectScripts) {
+    let projectPackageJson = require(path.join(cwd, 'package.json'));
+    projectPackageJson.scripts = { ...projectPackageJson.scripts, ...projectScripts };
+    fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(projectPackageJson, null, 2));
 }
 
 function displayAnimation(text = '') {

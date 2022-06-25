@@ -172,3 +172,9 @@ module.exports.directories = [
     'src/routers',
     'src/controllers'
 ]
+
+module.exports.scripts = {
+    dev: "nodemon ./src/index.ts",
+    build: "npx tsc",
+    start: "npm run build && node ./dist/index.js"
+}

@@ -174,7 +174,7 @@ module.exports.directories = [
 ]
 
 module.exports.scripts = {
-    dev: "npx nodemon ./src/index.ts",
+    dev: "npx nodemon src/{{entryFile}}",
     build: "npx tsc",
-    start: "npm run build && node ./dist/index.js"
+    start: "npm run build && node dist/{{entryFile}}"
 }

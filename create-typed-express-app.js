@@ -154,6 +154,14 @@ function createTsDirs(cwd, tsDirectories, tsFiles, strictMode) {
 
 function createScripts(cwd, projectScripts) {
     let projectPackageJson = require(path.join(cwd, 'package.json'));
+    if(projectPackageJson.main) {
+        projectScripts.dev = projectScripts.dev.replace('{{entryFile}}', projectPackageJson.main.split('.')[0] + '.ts');
+        projectScripts.start = projectScripts.start.replace('{{entryFile}}', projectPackageJson.main);
+    }
+
+    // Rename package name
+    projectPackageJson.main = 'dist/' + projectPackageJson.main;
+
     projectPackageJson.scripts = { ...projectPackageJson.scripts, ...projectScripts };
     fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(projectPackageJson, null, 2));
 }

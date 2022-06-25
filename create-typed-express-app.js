@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { spawn, execSync} = require('child_process');
+const { spawn } = require('child_process');
 const readline = require('readline');
 const chalk = require('chalk');
 const { Command } = require('commander');
@@ -18,7 +18,7 @@ const init = async () => {
     program.version(packageJson.version)
     .description(packageJson.description)
     .argument('<directory>', 'The new typescript app directory')
-    .option('--severity [value]', 'The level of severity of typescript type check')
+    .option('--strict', 'Turns on typescript strict type checking mode')
     .option('-y', 'Skip npm init')
     .action((dir, opts) => {
         directory = dir;
@@ -77,7 +77,7 @@ const init = async () => {
     }
     console.log(chalk.green('✓ Done.'))
     /** CREATE DIRECTORY STRUCTURE */
-    createTsDirs(process.cwd(), directories, files);
+    createTsDirs(process.cwd(), directories, files, !!options.strict);
 
     /** SETUP NPM SCRIPTS */
     createScripts(process.cwd(), scripts);
@@ -121,10 +121,12 @@ function installPackages(cwd, packages, dev) {
     });
 }
 
-function createTsDirs(cwd, tsDirectories, tsFiles) {
+function createTsDirs(cwd, tsDirectories, tsFiles, strictMode) {
     // Initialize typescript
     let projectPackageJson = require(path.join(cwd, 'package.json'));
-    let initTs = execSync('npx', ['tsc', '--init']);
+    let tsOptions = ['tsc', '--init'];
+    if(strictMode) tsOptions.push('--strict');
+    spawn('npx', tsOptions, { cwd });
 
     // Create directories
     for(let directory of tsDirectories) {

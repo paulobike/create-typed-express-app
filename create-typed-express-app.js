@@ -61,19 +61,21 @@ const init = async () => {
 
     // Dependencies
     let animation, packageInstall;
-    animation = displayAnimation('Installing necessary dependencies');
-    packageInstall = await installPackages(dependencies);
+    animation = displayAnimation(chalk.cyan('Installing necessary dependencies'));
+    packageInstall = await installPackages(process.cwd(), dependencies, false);
     clearTimeout(animation);
     if(!packageInstall) {
         process.exit(1);
     }
+    console.log(chalk.green('✓ Done.'))
     //Dev dependencies
-    animation = displayAnimation('Installing necessary dev dependencies');
-    packageInstall = await installPackages(devDependencies);
+    animation = displayAnimation(chalk.cyan('Installing necessary dev dependencies'));
+    packageInstall = await installPackages(process.cwd(), devDependencies, true);
     clearTimeout(animation);
     if(!packageInstall) {
         process.exit(1);
     }
+    console.log(chalk.green('✓ Done.'))
     /** CREATE DIRECTORY STRUCTURE */
     createTsDirs(process.cwd(), directories, files);
 
@@ -109,9 +111,9 @@ function initNPM(skip) {
     });    
 }
 
-function installPackages(packages, dev) {
+function installPackages(cwd, packages, dev) {
     return new Promise(resolve => {
-        let packageInstall = spawn('npm', ['install', ...packages, '--save' + dev&'-dev']);
+        let packageInstall = spawn('npm', ['install', ...packages, '--save' + (dev? '-dev': '')], { cwd });
         packageInstall.stdout.pipe(process.stdout);
         packageInstall.stderr.pipe(process.stderr);
 

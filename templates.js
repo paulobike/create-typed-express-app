@@ -145,7 +145,7 @@ export default ResponseError;`,
 }
 
 const dotenv = {
-    template: `IP=127.0.0.1\nPORT:3000`,
+    template: `IP=127.0.0.1\nPORT=3000`,
     path: 'src/.env'
 }
 

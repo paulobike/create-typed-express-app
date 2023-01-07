@@ -19,6 +19,11 @@
   "bin": {
     "create-typed-express-app": "./index.js"
   },
+  "files": [
+    "index.js",
+    "create-typed-express-app.js",
+    "templates.js"
+  ],
   "author": "paul obike",
   "license": "ISC",
   "bugs": {

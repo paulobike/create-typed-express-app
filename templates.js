@@ -108,7 +108,7 @@ const env = () :string=> {
         data = fs.readFileSync(dotenvPath, 'utf8');
     }
     catch (err) {
-        return 'Could\\'t load .env file.';
+        return 'Couldn\\'t load .env file.';
     }
     importEnv(data);
     return 'Found .env file. OK';

@@ -107,7 +107,7 @@ function initNPM(skip) {
     return new Promise(resolve => {
         let args = ['init'];
         skip && args.push('-y');
-        let npmInit = spawn('npm', args);
+        let npmInit = spawn('npm', args, { shell: true });
         npmInit.stdout.pipe(process.stdout);
         npmInit.stderr.pipe(process.stderr);
         
@@ -131,7 +131,7 @@ function initNPM(skip) {
 
 function installPackages(cwd, packages, dev) {
     return new Promise(resolve => {
-        let packageInstall = spawn('npm', ['install', '--no-audit', '--save' + (dev? '-dev': ''), ...packages], { cwd });
+        let packageInstall = spawn('npm', ['install', '--no-audit', '--save' + (dev? '-dev': ''), ...packages], { cwd, shell: true });
         packageInstall.stdout.pipe(process.stdout);
         packageInstall.stderr.pipe(process.stderr);
 
@@ -148,7 +148,7 @@ function createTsDirs(cwd, tsDirectories, tsFiles, strictMode) {
     let projectPackageJson = require(path.join(cwd, 'package.json'));
     let tsOptions = ['tsc', '--init'];
     if(strictMode) tsOptions.push('--strict');
-    let tsInit = spawn('npx', tsOptions, { cwd });
+    let tsInit = spawn('npx', tsOptions, { cwd, shell: true });
     tsInit.on('error', err => {
         console.log('Oops! it seems npm cannot be found on your system\n');
     });

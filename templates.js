@@ -83,7 +83,7 @@ const indexController = (req :Request, res :Response, next :NextFunction) :void 
     let response :ResponseData = {
         status: 200,
         message: 'success',
-        data: 'Hello World'
+        data: 'Hello World!'
     }
     res.json(response);
 }
